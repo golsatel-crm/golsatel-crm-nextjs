@@ -3,7 +3,6 @@
 <head>
   <title>Golsatel CRM - Dashboard</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="navbar">
@@ -11,35 +10,21 @@
     <a href="supervisores.html">Supervisores</a>
     <a href="#" onclick="logout()">Cerrar sesión</a>
   </div>
-
   <div class="container">
     <h2>Dashboard</h2>
-    <div id="stats"></div>
+    <p>Bienvenido: <strong id="user"></strong></p>
+    <p id="stats">Cargando...</p>
   </div>
-
   <script>
-    const SUPABASE_URL = "https://zagydqofegylrparessp.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_n7ZrRFHRTmhuy3xrqyCRhw_rCuNyRwE";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function loadDashboard() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) window.location.href = "login.html";
-
-      const { data: supervisores } = await supabase.from("supervisores").select("*");
-      
-      document.getElementById("stats").innerHTML = `
-        <p><strong>Supervisores registrados:</strong> ${supervisores?.length || 0}</p>
-        <p><strong>Usuario:</strong> ${session.user.email}</p>
-      `;
+    const user = localStorage.getItem('user');
+    if(!user) window.location.href = 'login.html';
+    document.getElementById('user').innerText = user;
+    document.getElementById('stats').innerText = 'Supervisores: 0 (conecta Supabase para ver datos)';
+    
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
     }
-
-    async function logout() {
-      await supabase.auth.signOut();
-      window.location.href = "login.html";
-    }
-
-    loadDashboard();
   </script>
 </body>
 </html>
