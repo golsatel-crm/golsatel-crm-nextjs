@@ -24,26 +24,29 @@
 
   <script>
     const SUPABASE_URL = "https://zagydqofegylrparessp.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_n7ZrRFHRTmhuy3xrqyCRhw_rCuNyRwE";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const SUPABASE_KEY = "sb_publLsable_n7Zr8FH8Thuy3xyqCRhw_cUkyR...";
+    let supabase;
+
+    try {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    } catch(e) {
+      console.error("Error inicializando Supabase:", e);
+    }
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email, password
-      });
-
-      if (error) {
-        document.getElementById("message").innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
-      } else {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
         window.location.href = "dashboard.html";
+      } catch(error) {
+        document.getElementById("message").innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
       }
     });
 
-    // Verificar si ya está logueado
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) window.location.href = "dashboard.html";
     });
