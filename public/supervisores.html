@@ -3,7 +3,6 @@
 <head>
   <title>Golsatel CRM - Supervisores</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="navbar">
@@ -14,10 +13,9 @@
 
   <div class="container">
     <h2>Gestión de Supervisores</h2>
-    <div id="message"></div>
     
     <h3>Agregar Nuevo Supervisor</h3>
-    <form id="formSupervisor">
+    <form onsubmit="addSupervisor(event)">
       <div class="form-group">
         <label>Nombre</label>
         <input type="text" id="nombre" required>
@@ -34,64 +32,57 @@
     </form>
 
     <h3>Lista de Supervisores</h3>
-    <div id="list"></div>
+    <table id="table">
+      <tr><th>Nombre</th><th>Email</th><th>Ciudad</th><th>Acciones</th></tr>
+    </table>
   </div>
 
   <script>
-    const SUPABASE_URL = "https://zagydqofegylrparessp.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_n7ZrRFHRTmhuy3xrqyCRhw_rCuNyRwE";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const user = localStorage.getItem('user');
+    if(!user) window.location.href = 'login.html';
 
-    async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) window.location.href = "login.html";
+    let supervisores = JSON.parse(localStorage.getItem('supervisores')) || [];
+
+    function saveSupervisores() {
+      localStorage.setItem('supervisores', JSON.stringify(supervisores));
+      loadTable();
     }
 
-    async function loadSupervisores() {
-      const { data, error } = await supabase.from("supervisores").select("*");
-      if (error) {
-        document.getElementById("list").innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
-        return;
-      }
-      
-      let html = "<table><tr><th>Nombre</th><th>Email</th><th>Ciudad</th><th>Acciones</th></tr>";
-      data.forEach(s => {
-        html += `<tr><td>${s.nombre}</td><td>${s.email}</td><td>${s.ciudad || "-"}</td><td><button class="btn-danger" onclick="deleteSupervisor(${s.id})">Eliminar</button></td></tr>`;
-      });
-      html += "</table>";
-      document.getElementById("list").innerHTML = html;
-    }
-
-    async function deleteSupervisor(id) {
-      if (!confirm("¿Eliminar este supervisor?")) return;
-      await supabase.from("supervisores").delete().eq("id", id);
-      loadSupervisores();
-    }
-
-    document.getElementById("formSupervisor").addEventListener("submit", async (e) => {
+    function addSupervisor(e) {
       e.preventDefault();
-      const { error } = await supabase.from("supervisores").insert([{
-        nombre: document.getElementById("nombre").value,
-        email: document.getElementById("email").value,
-        ciudad: document.getElementById("ciudad").value
-      }]);
-
-      if (error) {
-        document.getElementById("message").innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
-      } else {
-        document.getElementById("message").innerHTML = `<div class="alert alert-success">Supervisor guardado</div>`;
-        document.getElementById("formSupervisor").reset();
-        loadSupervisores();
-      }
-    });
-
-    checkAuth();
-    loadSupervisores();
-
-    async function logout() {
-      await supabase.auth.signOut();
-      window.location.href = "login.html";
+      supervisores.push({
+        id: Date.now(),
+        nombre: document.getElementById('nombre').value,
+        email: document.getElementById('email').value,
+        ciudad: document.getElementById('ciudad').value
+      });
+      saveSupervisores();
+      document.getElementById('nombre').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('ciudad').value = '';
     }
+
+    function deleteSupervisor(id) {
+      if(confirm('¿Eliminar?')) {
+        supervisores = supervisores.filter(s => s.id !== id);
+        saveSupervisores();
+      }
+    }
+
+    function loadTable() {
+      let html = '<tr><th>Nombre</th><th>Email</th><th>Ciudad</th><th>Acciones</th></tr>';
+      supervisores.forEach(s => {
+        html += `<tr><td>${s.nombre}</td><td>${s.email}</td><td>${s.ciudad || '-'}</td><td><button class="btn-danger" onclick="deleteSupervisor(${s.id})">Eliminar</button></td></tr>`;
+      });
+      document.getElementById('table').innerHTML = html;
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    loadTable();
   </script>
 </body>
 </html>
